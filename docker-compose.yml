@@ -1,0 +1,91 @@
+version: '3'
+services:
+  tms:
+    build:
+      context: .
+      args:
+        user: jedi
+        uid: 1000
+    image: jedi-tms
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - jedi-tms-network
+
+  composer:
+    build:
+      context: .
+      args:
+        user: jedi
+        uid: 1000
+    working_dir: /var/www
+    entrypoint: ['composer']
+    volumes:
+      - ./:/var/www
+    networks:
+      - jedi-tms-network
+
+  artisan:
+    build:
+      context: .
+      args:
+        user: jedi
+        uid: 1000
+    working_dir: /var/www
+    entrypoint: ['php', 'artisan']
+    volumes:
+      - ./:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - jedi-tms-network
+
+  db:
+    image: mysql:8.0
+    container_name: jedi-tms-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tms
+      MYSQL_ROOT_PASSWORD: p0t@t0_2026!
+      MYSQL_PASSWORD: p0t@t0_2026!
+      MYSQL_USER: tms
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - ./docker-compose/mysql:/var/lib/mysql
+    networks:
+      - jedi-tms-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
+    container_name: jedi-tms-pma
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+    networks:
+      - jedi-tms-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: jedi-tms-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d/
+    networks:
+      - jedi-tms-network
+
+networks:
+  jedi-tms-network:
+    driver: bridge

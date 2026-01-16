@@ -1,0 +1,235 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Translation Service API",
+        "version": "1.0.0",
+        "description": "High-performance API for managing translations with tagging and CDN-ready JSON export."
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Local Development Server"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    },
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/translations": {
+            "get": {
+                "summary": "List translations",
+                "parameters": [
+                    {
+                        "name": "locale",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "key",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tag",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "content",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated list of translations"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create translation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "locale",
+                                    "key",
+                                    "content"
+                                ],
+                                "properties": {
+                                    "locale": {
+                                        "type": "string"
+                                    },
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
+        "/translations/{id}": {
+            "get": {
+                "summary": "Get translation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Translation details"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update translation",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "locale": {
+                                        "type": "string"
+                                    },
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "tags": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated"
+                    }
+                }
+            }
+        },
+        "/export": {
+            "get": {
+                "summary": "Export translations as JSON",
+                "description": "Returns a simple key-value JSON object. Supports HTTP Caching (ETag, Last-Modified) for CDN integration.",
+                "parameters": [
+                    {
+                        "name": "locale",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Comma-separated list of tags",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON map of key-values",
+                        "headers": {
+                            "ETag": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "Cache-Control": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "304": {
+                        "description": "Not Modified (Client cache is fresh)"
+                    }
+                }
+            }
+        }
+    }
+}
